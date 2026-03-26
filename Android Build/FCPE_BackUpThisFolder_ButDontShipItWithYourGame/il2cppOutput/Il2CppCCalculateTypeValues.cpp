@@ -1244,6 +1244,7 @@ struct BitArray_tFD42FDEB4A51DD2D6C20DC8E220B1EBE999F2616;
 struct Bloom_t0C806C947E1D104DC95E933B3FB9A307CBB5B225;
 struct BoolParameter_tAA460C5A72ADBDDB4519BFF0BA040EC202E14E95;
 struct BottleneckHistory_tB05DCBF6856ABC4CF0A7CE9249E0BCC20DC9F9EB;
+struct Button_t6786514A57F7AFDEE5431112FEA0CAB24F5AE098;
 struct Button_t8EC3B431665F84C0B637C11B0EA29236828646C2;
 struct ButtonControl_t85949109B98AAF5B7ADC0285F0EC98A61EC88ECF;
 struct Byte_t94D9231AC217BE4D2E004C4CD32DF6D099EA41A3;
@@ -1654,7 +1655,7 @@ struct Plane_tB7D8CC6F7AACF5F3AA483AF005C1102A8577BC0C;
 struct Player_tF98BD09D3495D2FF1922E5D34866AEAC6AE2DF74;
 struct PlayerEditorConnectionEvents_tF92F4A9A0EDAB7D3D544AE9B0F3F925C4E48B7CB;
 struct PlayerInstance_t8145296DC662529876CE4A6FD759B8267CF89DF1;
-struct PlayerInventoryHandler_tDA898EF68528692A4AF2106DE0CD67A0695B17BD;
+struct PlayerInteraction_t720F21A1CF044E4EF086A17FA57326D84EA5C575;
 struct PointerDispatchState_t145BB8BB02690F87487325596E690295E39A383A;
 struct PointerEventData_t9670F3C7D823CCB738A1604C72A1EB90292396FB;
 struct PolyNode_tF1280A79A0B4FFF3BB40C965C02885F7D91F4BA9;
@@ -7244,11 +7245,11 @@ struct MessageTypeSubscribers_t1FA1C0DBEE77D28856F8BB97C784EB77920C308D  : publi
 	int32_t ___subscriberCount;
 	MessageEvent_tBF02D60FEABA2052B9970B1DEF2322E38ADE61C9* ___messageCallback;
 };
-struct U3CSetupMobileU3Ed__9_t2D4540103CBF39CE7F7B33F7C3650176C76D7585  : public RuntimeObject
+struct U3CFindPlaceButtonU3Ed__11_t6B18006A6EDEB704C1E4844FE4CBCEAF0B5C27FF  : public RuntimeObject
 {
 	int32_t ___U3CU3E1__state;
 	RuntimeObject* ___U3CU3E2__current;
-	PlayerInventoryHandler_tDA898EF68528692A4AF2106DE0CD67A0695B17BD* ___U3CU3E4__this;
+	PlayerInteraction_t720F21A1CF044E4EF086A17FA57326D84EA5C575* ___U3CU3E4__this;
 };
 struct U3CU3Ec_t3F0DEFE655705648D1AB38F78F6D26B583866DB2  : public RuntimeObject
 {
@@ -46679,7 +46680,8 @@ struct PlayerInteraction_t720F21A1CF044E4EF086A17FA57326D84EA5C575  : public Net
 	double ___lastHitTime;
 	double ___lastBlockInteractionTime;
 	Player_tF98BD09D3495D2FF1922E5D34866AEAC6AE2DF74* ____player;
-	float ___lastTapTime;
+	bool ___placeMode;
+	Button_t6786514A57F7AFDEE5431112FEA0CAB24F5AE098* ___placeButton;
 };
 struct Portal_Frame_t5F0B0106CCF54254853A6DBCFF77F5B3BC8F11C4  : public Block_t93F87C2AAA9348AD5D7F39D890FD6B6B23AD26E7
 {
@@ -64440,9 +64442,9 @@ const Il2CppTypeDefinitionSizes g_typeDefinitionSize5396 = { sizeof(PlayerHunger
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5397;
 const Il2CppTypeDefinitionSizes g_typeDefinitionSize5397 = { sizeof(PlayerInstance_t8145296DC662529876CE4A6FD759B8267CF89DF1), -1, sizeof(PlayerInstance_t8145296DC662529876CE4A6FD759B8267CF89DF1_StaticFields), 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5398;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize5398 = { sizeof(PlayerInteraction_t720F21A1CF044E4EF086A17FA57326D84EA5C575), -1, 0, 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize5398 = { sizeof(U3CFindPlaceButtonU3Ed__11_t6B18006A6EDEB704C1E4844FE4CBCEAF0B5C27FF), -1, 0, 0 };
 extern const Il2CppTypeDefinitionSizes g_typeDefinitionSize5399;
-const Il2CppTypeDefinitionSizes g_typeDefinitionSize5399 = { sizeof(U3CSetupMobileU3Ed__9_t2D4540103CBF39CE7F7B33F7C3650176C76D7585), -1, 0, 0 };
+const Il2CppTypeDefinitionSizes g_typeDefinitionSize5399 = { sizeof(PlayerInteraction_t720F21A1CF044E4EF086A17FA57326D84EA5C575), -1, 0, 0 };
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif

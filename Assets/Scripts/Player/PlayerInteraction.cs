@@ -80,52 +80,73 @@ public class PlayerInteraction : NetworkBehaviour
     {
         if (UnityEngine.Application.isMobilePlatform)
         {
-            if (Input.touchCount > 0 && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId))
-                return;
-        }
-        else
-        {
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
-        }
-
-        Entity entity = GetEntityAtPosition(inputPos);
-
-        if (UnityEngine.Application.isMobilePlatform && Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if (touch.phase == TouchPhase.Began)
+            if (Input.touchCount > 0)
             {
-                if (placeMode)
-                {
-                    CMD_Interact(GetBlockedTouchLocation(touch.position), 1, true);
-                    return;
-                }
+                Touch touch = Input.GetTouch(0);
+                if (EventSystem.current.IsPointerOverGameObject(touch.fingerId)) return;
 
-                if (entity != null) CMD_HitEntity(entity);
-                else CMD_Interact(GetBlockedTouchLocation(touch.position), 0, true);
+                Entity entity = GetEntityAtPosition(inputPos);
+                Location loc = GetBlockedTouchLocation(touch.position);
+
+                if (touch.phase == TouchPhase.Began)
+                {
+                    if (placeMode)
+                    {
+                        CMD_TryPlaceBlock(loc);
+                        return;
+                    }
+
+                    if (entity != null)
+                        CMD_HitEntity(entity);
+                    else
+                        CMD_Interact(loc, 0, true);
+                }
             }
 
             return;
         }
 
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+
+        Entity mouseEntity = GetEntityAtPosition(inputPos);
+        Location mouseLoc = GetBlockedMouseLocation();
+
         if (Input.GetMouseButtonDown(0))
         {
-            if (entity != null) CMD_HitEntity(entity);
-            else CMD_Interact(GetBlockedMouseLocation(), 0, true);
+            if (placeMode)
+            {
+                CMD_TryPlaceBlock(mouseLoc);
+            }
+            else if (mouseEntity != null)
+            {
+                CMD_HitEntity(mouseEntity);
+            }
+            else
+            {
+                CMD_Interact(mouseLoc, 0, true);
+            }
         }
 
         if (Input.GetMouseButton(0))
         {
-            if (entity != null) CMD_HitEntity(entity);
-            else CMD_Interact(GetBlockedMouseLocation(), 0, false);
+            if (!placeMode)
+            {
+                if (mouseEntity != null)
+                    CMD_HitEntity(mouseEntity);
+                else
+                    CMD_Interact(mouseLoc, 0, false);
+            }
         }
 
         if (Input.GetMouseButtonDown(1))
         {
-            if (entity != null) CMD_InteractEntity(entity);
-            else CMD_Interact(GetBlockedMouseLocation(), 1, true);
+            if (!placeMode)
+            {
+                if (mouseEntity != null)
+                    CMD_InteractEntity(mouseEntity);
+                else
+                    CMD_Interact(mouseLoc, 1, true);
+            }
         }
     }
 
