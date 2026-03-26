@@ -1,8 +1,8 @@
-﻿using UnityEditor;
-using UnityEngine;
-
-namespace ParrelSync.NonCore
+﻿namespace ParrelSync.NonCore
 {
+    using UnityEditor;
+    using UnityEngine;
+
     public class OtherMenuItem
     {
         [MenuItem("ParrelSync/GitHub/View this project on GitHub", priority = 10)]

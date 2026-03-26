@@ -61,7 +61,7 @@ public class SaveManager : NetworkBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("Error in saving entity: " + ex.StackTrace);
+                UnityEngine.Debug.LogWarning("Error in saving entity: " + ex.StackTrace);
             }
     }
 
@@ -69,62 +69,60 @@ public class SaveManager : NetworkBehaviour
     {
         //Get all changed chunks
         Dictionary<ChunkPosition, List<BlockChange>> chunkBlockChanges = new Dictionary<ChunkPosition, List<BlockChange>>();
-        
+
         foreach (BlockChange blockChange in changes)
         {
             ChunkPosition chunkPos = new ChunkPosition(blockChange.location);
-            
-            //Initialize lists for each chunk
-            if(!chunkBlockChanges.ContainsKey(chunkPos))
+
+            if (!chunkBlockChanges.ContainsKey(chunkPos))
                 chunkBlockChanges.Add(chunkPos, new List<BlockChange>());
-            
+
             chunkBlockChanges[chunkPos].Add(blockChange);
         }
 
-        //Iterate for each changed chunk
-        //Will load previous chunk state, overwrite values with new block changes, and save
         foreach (ChunkPosition changedChunk in chunkBlockChanges.Keys)
         {
-            //Dictionary representing the state of blocks in chunk
             Dictionary<Location, BlockState> chunkBlockStates = new Dictionary<Location, BlockState>();
-            
-            //Make sure folders and files for chunk are populated
+
             if (!changedChunk.HasBeenSaved())
                 changedChunk.CreateChunkPath();
-            
-            //Get chunk file path
-            string changedChunkFilePath = 
-                WorldManager.world.GetPath() + "\\chunks\\" + changedChunk.dimension + "\\" + changedChunk.chunkX;
 
-            //Load old block states from file, store in dictionary
-            foreach (string line in File.ReadAllLines(changedChunkFilePath + "\\blocks"))
+            string changedChunkFilePath =
+                UnityEngine.Application.persistentDataPath + "/chunks/" + changedChunk.dimension + "/" + changedChunk.chunkX;
+
+            if (Directory.Exists(changedChunkFilePath + "/blocks"))
             {
-                try {
-                    Location lineLocation = new Location(
-                        int.Parse(line.Split('*')[0].Split(',')[0]),
-                        int.Parse(line.Split('*')[0].Split(',')[1]));
-                    string lineBlockSaveString = line.Split('*')[1] + "*" + line.Split('*')[2];
-                    BlockState blockState = new BlockState(lineBlockSaveString);
+                try
+                {
+                    foreach (string line in File.ReadAllLines(changedChunkFilePath + "/blocks"))
+                    {
+                        Location lineLocation = new Location(
+                            int.Parse(line.Split('*')[0].Split(',')[0]),
+                            int.Parse(line.Split('*')[0].Split(',')[1])
+                        );
+                        string lineBlockSaveString = line.Split('*')[1] + "*" + line.Split('*')[2];
+                        BlockState blockState = new BlockState(lineBlockSaveString);
 
-                    chunkBlockStates[lineLocation] = blockState;
-                } catch (Exception e) { Debug.LogError("Error in loading block state,save line: '" + line + "' error: " + e.Message + e.StackTrace); }
+                        chunkBlockStates[lineLocation] = blockState;
+                    }
+                }
+                catch (Exception e)
+                {
+                    UnityEngine.Debug.LogError("Error loading block state: " + e.Message + e.StackTrace);
+                }
             }
-           
-            //Get all block changes for current chunk
+
             List<BlockChange> newBlockChangesForChunk = chunkBlockChanges[changedChunk];
-            //Overwrite / Populate chunkBlockStates with new block changes
+
             foreach (var blockChange in newBlockChangesForChunk)
             {
                 chunkBlockStates[blockChange.location] = blockChange.newBlockState;
             }
 
-            //Empty file before writing
-            File.WriteAllText(changedChunkFilePath + "\\blocks", string.Empty);
-            
-            //Create Text Writer for chunk
-            using (TextWriter c = new StreamWriter(changedChunkFilePath + "\\blocks"))
+            Directory.CreateDirectory(changedChunkFilePath);
+
+            using (TextWriter c = new StreamWriter(changedChunkFilePath + "/blocks"))
             {
-                //Write all block states to file
                 foreach (Location location in chunkBlockStates.Keys)
                     c.WriteLine(location.x + "," + location.y + "*" + chunkBlockStates[location].GetSaveString());
             }
@@ -139,7 +137,6 @@ public struct BlockChange
 
     public BlockChange(Location location, BlockState newBlockState)
     {
-        //populate block change properties
         this.location = location;
         this.newBlockState = newBlockState;
     }

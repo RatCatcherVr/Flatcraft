@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
-public class ItemHeldAchievment : Achievement
+public class ItemHeldAchievement : Achievement
 {
     public Material[] materialCriteria;
 
@@ -11,19 +10,13 @@ public class ItemHeldAchievment : Achievement
     protected override void TrackingLoop()
     {
         PlayerInstance localPlayerInstance = PlayerInstance.localPlayerInstance;
-
-        if (!localPlayerInstance)
-            return;
+        if (!localPlayerInstance) return;
 
         Player playerEntity = localPlayerInstance.playerEntity;
-
-        if (!playerEntity)
-            return;
+        if (!playerEntity) return;
 
         PlayerInventory inventory = playerEntity.GetInventoryHandler().GetInventory();
-
-        if (inventory == null)
-            return;
+        if (inventory == null) return;
 
         foreach (Material matAlternative in materialCriteria)
         {
@@ -33,6 +26,13 @@ public class ItemHeldAchievment : Achievement
                 return;
             }
         }
+    }
+
+    private void GrantAchievement()
+    {
+#if !DISABLESTEAMWORKS
+        UnityEngine.Debug.Log("Granted achievement: " + achievementId);
+#endif
     }
 #endif
 }

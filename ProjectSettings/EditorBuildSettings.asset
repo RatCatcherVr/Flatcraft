@@ -23,4 +23,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MultiplayerDisconnectedMenu.unity
     guid: 378ffd85df4bcc0488d4ad7fbcaf3332
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000,
+      guid: d8eb8c48c8f6a8e4cad8e84c668c9b05, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 455fc7de94aa4d24392085e5bedae37d,
+      type: 2}
+    com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000,
+      guid: eccc01c71f1c95a48a83b5999b79c4f2, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
+      guid: 3c662c57038fc4742b46cdd4cebe0153, type: 2}

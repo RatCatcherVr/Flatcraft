@@ -10,17 +10,20 @@ public class VisitDimensionAchievement : Achievement
     protected override void TrackingLoop()
     {
         PlayerInstance localPlayerInstance = PlayerInstance.localPlayerInstance;
-
-        if (!localPlayerInstance)
-            return;
+        if (!localPlayerInstance) return;
 
         Player playerEntity = localPlayerInstance.playerEntity;
+        if (!playerEntity) return;
 
-        if (!playerEntity)
-            return;
-        
         if (playerEntity.Location.dimension == trackedDimension)
             GrantAchievement();
+    }
+
+    private void GrantAchievement()
+    {
+#if !DISABLESTEAMWORKS
+        UnityEngine.Debug.Log("Granted achievement: " + achievementId);
+#endif
     }
 #endif
 }

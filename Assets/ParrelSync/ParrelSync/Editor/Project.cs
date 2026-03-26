@@ -1,35 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace ParrelSync
 {
-    public class Project : ICloneable
+    public class Project : System.ICloneable
     {
-        public string assetPath;
-        public string autoBuildPath;
-        public string libraryPath;
-        public string localPackages;
         public string name;
-        public string packagesPath;
         public string projectPath;
+        string rootPath;
+        public string assetPath;
         public string projectSettingsPath;
-        private string rootPath;
+        public string libraryPath;
+        public string packagesPath;
+        public string autoBuildPath;
+        public string localPackages;
 
-        private char[] separator = new char[1] {'/'};
+        char[] separator = new char[1] { '/' };
 
 
         /// <summary>
-        ///     Default constructor
+        /// Default constructor
         /// </summary>
         public Project()
         {
+
         }
 
 
         /// <summary>
-        ///     Initialize the project object by parsing its full path returned by Unity into a bunch of individual folder names
-        ///     and paths.
+        /// Initialize the project object by parsing its full path returned by Unity into a bunch of individual folder names and paths.
         /// </summary>
         /// <param name="path"></param>
         public Project(string path)
@@ -39,7 +38,7 @@ namespace ParrelSync
 
 
         /// <summary>
-        ///     Create a new object with the same settings
+        /// Create a new object with the same settings
         /// </summary>
         /// <returns></returns>
         public object Clone()
@@ -62,8 +61,7 @@ namespace ParrelSync
 
 
         /// <summary>
-        ///     Update the project object by renaming and reparsing it. Pass in the new name of a project, and it'll update the
-        ///     other member variables to match.
+        /// Update the project object by renaming and reparsing it. Pass in the new name of a project, and it'll update the other member variables to match.
         /// </summary>
         /// <param name="name"></param>
         public void updateNewName(string newName)
@@ -74,7 +72,7 @@ namespace ParrelSync
 
 
         /// <summary>
-        ///     Debug override so we can quickly print out the project info.
+        /// Debug override so we can quickly print out the project info.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
@@ -88,7 +86,7 @@ namespace ParrelSync
                                  autoBuildPath + "\n" +
                                  localPackages + "\n" +
                                  libraryPath;
-            return printString;
+            return (printString);
         }
 
         private void ParsePath(string path)
@@ -97,11 +95,11 @@ namespace ParrelSync
             projectPath = path;
 
             //pop off the last part of the path for the project name, keep the rest for the root path
-            List<string> pathArray = projectPath.Split(separator).ToList();
+            List<string> pathArray = projectPath.Split(separator).ToList<string>();
             name = pathArray.Last();
 
             pathArray.RemoveAt(pathArray.Count() - 1);
-            rootPath = string.Join(separator[0].ToString(), pathArray);
+            rootPath = string.Join(separator[0].ToString(), pathArray.ToArray());
 
             assetPath = projectPath + "/Assets";
             projectSettingsPath = projectPath + "/ProjectSettings";

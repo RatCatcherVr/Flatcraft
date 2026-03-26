@@ -1,10 +1,8 @@
 ﻿namespace ParrelSync
 {
-    public class ExternalLinks
+    public class ExternalLinks 
     {
-        public const string RemoteVersionURL =
-            "https://raw.githubusercontent.com/VeriorPies/ParrelSync/master/VERSION.txt";
-
+        public const string RemoteVersionURL = "https://raw.githubusercontent.com/VeriorPies/ParrelSync/master/VERSION.txt";
         public const string Releases = "https://github.com/VeriorPies/ParrelSync/releases";
         public const string CustomArgumentHelpLink = "https://github.com/VeriorPies/ParrelSync/wiki/Argument";
 

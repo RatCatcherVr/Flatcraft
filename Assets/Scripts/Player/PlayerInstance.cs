@@ -1,11 +1,6 @@
 using kcp2k;
 using Mirror;
 using UnityEngine;
-using UnityEngine.Serialization;
-
-#if !DISABLESTEAMWORKS
-using Steamworks;
-#endif
 
 public class PlayerInstance : NetworkBehaviour
 {
@@ -27,16 +22,10 @@ public class PlayerInstance : NetworkBehaviour
     {
         base.OnStartLocalPlayer();
 
-        Debug.Log("Starting local player instance");
         localPlayerInstance = this;
-        
-#if !DISABLESTEAMWORKS
-        ChangeSteamId(SteamUser.GetSteamID().m_SteamID);
-#endif
         ChangeUUID(SettingsManager.PlayerName);
-            
         RequestJoinMessage();
-        if(isServer) ChatManager.instance.AddMessage($"Hosting on port {((KcpTransport)NetworkManager.singleton.transport).port}");
+        if (isServer) ChatManager.instance.AddMessage($"Hosting on port {((KcpTransport)NetworkManager.singleton.transport).port}");
     }
 
     [Command]
@@ -44,17 +33,10 @@ public class PlayerInstance : NetworkBehaviour
     {
         uuid = newUuid;
     }
-    
-    /*[Command]
-    public void ChangeSteamId(ulong newSteamId)
-    {
-        uuid = newSteamId;
-    }*/
-    
+
     public override void OnStopServer()
     {
         ChatManager.instance.AddMessage(GetPlayerName() + " left the world");
-
         base.OnStopServer();
     }
 
@@ -71,7 +53,6 @@ public class PlayerInstance : NetworkBehaviour
         if (playerEntity != null)
             return;
 
-        Debug.Log("Spawning local player");
         GameObject player = Entity.Spawn("Player", uuid.ToString(), new Vector2(0, 80)).gameObject;
         player.GetComponent<Player>().displayName = GetPlayerName();
         player.GetComponent<Player>().playerInstance = this;
@@ -81,10 +62,6 @@ public class PlayerInstance : NetworkBehaviour
 
     public string GetPlayerName()
     {
-#if !DISABLESTEAMWORKS
-        return SteamFriends.GetFriendPersonaName((CSteamID)steamId);
-#endif
-        
         return uuid;
     }
 }

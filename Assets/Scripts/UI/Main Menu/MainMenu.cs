@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
-    public static string discordURL = "https://discord.gg/kfY6MyTFNK";
+    public static string discordURL = "https://discord.gg/NZYVQHsEQb";
     public Text versionText;
 
     public GameObject singleplayerMenuPrefab;

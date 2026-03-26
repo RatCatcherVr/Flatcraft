@@ -1,0 +1,155 @@
+﻿#include "pch-c.h"
+#ifndef _MSC_VER
+# include <alloca.h>
+#else
+# include <malloc.h>
+#endif
+
+
+#include "codegen/il2cpp-codegen-metadata.h"
+
+
+
+
+
+extern void UnitySourceGeneratedAssemblyMonoScriptTypes_v1_Get_m9720D337B4274461E0CD1DF0B0691A931E682CEB (void);
+extern void UnitySourceGeneratedAssemblyMonoScriptTypes_v1__ctor_m3BB83DB6ACDC719F7AF217555DFF53064CD07595 (void);
+extern void MultiplexTransport_get_Port_mE96B7DD2F36D4734060154EBD2B31378803665ED (void);
+extern void MultiplexTransport_set_Port_mDD400AF478A4CD93EEE0559A42FC44A53ED84F20 (void);
+extern void MultiplexTransport_AddToLookup_mBDF18EB04BB03AD132485D5AC7EFB4CDE9C2FE70 (void);
+extern void MultiplexTransport_RemoveFromLookup_m81B28236D318BA11F635E18E7C78AC6E183077AB (void);
+extern void MultiplexTransport_OriginalId_mEA9FCE371F5C0E7E557AC5210571EEBA2ECC2025 (void);
+extern void MultiplexTransport_MultiplexId_mB425B211F00D17C4139A6E68B0EFD0BA8B0D67CC (void);
+extern void MultiplexTransport_Awake_m53DE47DBAD60FA008044442B6CA960319F4EA0A1 (void);
+extern void MultiplexTransport_ClientEarlyUpdate_m374BB0875B3EC3BBF238911B6A6426B16A453766 (void);
+extern void MultiplexTransport_ServerEarlyUpdate_m8BD391D7CA759CDC33063B079B3B1B515E7AAFD4 (void);
+extern void MultiplexTransport_ClientLateUpdate_m622F58118E0B5946A0E593C9DF27E1BFEF5BAEF1 (void);
+extern void MultiplexTransport_ServerLateUpdate_m36A3BF01A4E9048EFD211977389327D5D8CEB78A (void);
+extern void MultiplexTransport_OnEnable_m4EC836236796A9DA0CD4FB031E7EA2A012221675 (void);
+extern void MultiplexTransport_OnDisable_mD549D4146A6871DE708ED36C651B70F5E0F8E7EA (void);
+extern void MultiplexTransport_Available_m83921D6F6F5EEFC563B04BF6DB6197C736B49EFE (void);
+extern void MultiplexTransport_ClientConnect_m5E8B713FC2719B20C56E9D9DED8B1386F78318FA (void);
+extern void MultiplexTransport_ClientConnect_m102A01E402B26CFA416B939C1A489936F8EFB2FE (void);
+extern void MultiplexTransport_ClientConnected_m8BFE3918CD0400C36D75B935494BD8D20C722A93 (void);
+extern void MultiplexTransport_ClientDisconnect_m690F65A652B2630CD671A3B02BD04A2C95A066AF (void);
+extern void MultiplexTransport_ClientSend_m393E218C70BA2CBD57C4A6B2FDCA24521175CB90 (void);
+extern void MultiplexTransport_AddServerCallbacks_m9ED8771B6FAD5B1588AF47BDACB3C46A1EB788E7 (void);
+extern void MultiplexTransport_ServerUri_m4610CD2E395190A575C0E1E056CA14FCE53F3C1E (void);
+extern void MultiplexTransport_ServerActive_mED0CF1B8459A9ABCDCBB9E02D49EA0660104B4AC (void);
+extern void MultiplexTransport_ServerGetClientAddress_m8D4E3A45E501C2874E4C1A1BAE3C94C576A6419B (void);
+extern void MultiplexTransport_ServerDisconnect_m5CFB9D152CADA4649602B9F6C125E5D3F435657B (void);
+extern void MultiplexTransport_ServerSend_m3C8399382E6F4A99E38C2DDCC8B310AEA3F35FCD (void);
+extern void MultiplexTransport_ServerStart_m20489F83D568D628DE305739C6F23DD930D82D88 (void);
+extern void MultiplexTransport_ServerStop_m9D7D4B749F3A500D8C6844A2AE37E0B314E601B4 (void);
+extern void MultiplexTransport_GetMaxPacketSize_mAE8764CE6477A6CD968C16FCF055F9FD94381AF3 (void);
+extern void MultiplexTransport_Shutdown_mF78993F735BCF8BEBFB79E591C87FE9AEEED27FF (void);
+extern void MultiplexTransport_ToString_m2A30937DA85CC0B7A0C633A5FA8BEF29C10CE14C (void);
+extern void MultiplexTransport__ctor_m7C8CB590C5E4F468B435D22A8E11C3E4465DA442 (void);
+extern void U3CU3Ec__DisplayClass26_0__ctor_mF8B2EA0BA974D2401CDE747DDEBA7DB88AE28D4A (void);
+extern void U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__0_mD072B736557F40543F124CD3F03AE92DD6FA40D1 (void);
+extern void U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__1_m61A6353F898D3C70DC386519937EECC223E549FC (void);
+extern void U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__2_m95F1C408FA1DE5D2EF11E0C2E2E64B558C2DAC91 (void);
+extern void U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__3_m9408354ADF2AE7D252712A930EC654295DB40814 (void);
+static Il2CppMethodPointer s_methodPointers[38] = 
+{
+	UnitySourceGeneratedAssemblyMonoScriptTypes_v1_Get_m9720D337B4274461E0CD1DF0B0691A931E682CEB,
+	UnitySourceGeneratedAssemblyMonoScriptTypes_v1__ctor_m3BB83DB6ACDC719F7AF217555DFF53064CD07595,
+	MultiplexTransport_get_Port_mE96B7DD2F36D4734060154EBD2B31378803665ED,
+	MultiplexTransport_set_Port_mDD400AF478A4CD93EEE0559A42FC44A53ED84F20,
+	MultiplexTransport_AddToLookup_mBDF18EB04BB03AD132485D5AC7EFB4CDE9C2FE70,
+	MultiplexTransport_RemoveFromLookup_m81B28236D318BA11F635E18E7C78AC6E183077AB,
+	MultiplexTransport_OriginalId_mEA9FCE371F5C0E7E557AC5210571EEBA2ECC2025,
+	MultiplexTransport_MultiplexId_mB425B211F00D17C4139A6E68B0EFD0BA8B0D67CC,
+	MultiplexTransport_Awake_m53DE47DBAD60FA008044442B6CA960319F4EA0A1,
+	MultiplexTransport_ClientEarlyUpdate_m374BB0875B3EC3BBF238911B6A6426B16A453766,
+	MultiplexTransport_ServerEarlyUpdate_m8BD391D7CA759CDC33063B079B3B1B515E7AAFD4,
+	MultiplexTransport_ClientLateUpdate_m622F58118E0B5946A0E593C9DF27E1BFEF5BAEF1,
+	MultiplexTransport_ServerLateUpdate_m36A3BF01A4E9048EFD211977389327D5D8CEB78A,
+	MultiplexTransport_OnEnable_m4EC836236796A9DA0CD4FB031E7EA2A012221675,
+	MultiplexTransport_OnDisable_mD549D4146A6871DE708ED36C651B70F5E0F8E7EA,
+	MultiplexTransport_Available_m83921D6F6F5EEFC563B04BF6DB6197C736B49EFE,
+	MultiplexTransport_ClientConnect_m5E8B713FC2719B20C56E9D9DED8B1386F78318FA,
+	MultiplexTransport_ClientConnect_m102A01E402B26CFA416B939C1A489936F8EFB2FE,
+	MultiplexTransport_ClientConnected_m8BFE3918CD0400C36D75B935494BD8D20C722A93,
+	MultiplexTransport_ClientDisconnect_m690F65A652B2630CD671A3B02BD04A2C95A066AF,
+	MultiplexTransport_ClientSend_m393E218C70BA2CBD57C4A6B2FDCA24521175CB90,
+	MultiplexTransport_AddServerCallbacks_m9ED8771B6FAD5B1588AF47BDACB3C46A1EB788E7,
+	MultiplexTransport_ServerUri_m4610CD2E395190A575C0E1E056CA14FCE53F3C1E,
+	MultiplexTransport_ServerActive_mED0CF1B8459A9ABCDCBB9E02D49EA0660104B4AC,
+	MultiplexTransport_ServerGetClientAddress_m8D4E3A45E501C2874E4C1A1BAE3C94C576A6419B,
+	MultiplexTransport_ServerDisconnect_m5CFB9D152CADA4649602B9F6C125E5D3F435657B,
+	MultiplexTransport_ServerSend_m3C8399382E6F4A99E38C2DDCC8B310AEA3F35FCD,
+	MultiplexTransport_ServerStart_m20489F83D568D628DE305739C6F23DD930D82D88,
+	MultiplexTransport_ServerStop_m9D7D4B749F3A500D8C6844A2AE37E0B314E601B4,
+	MultiplexTransport_GetMaxPacketSize_mAE8764CE6477A6CD968C16FCF055F9FD94381AF3,
+	MultiplexTransport_Shutdown_mF78993F735BCF8BEBFB79E591C87FE9AEEED27FF,
+	MultiplexTransport_ToString_m2A30937DA85CC0B7A0C633A5FA8BEF29C10CE14C,
+	MultiplexTransport__ctor_m7C8CB590C5E4F468B435D22A8E11C3E4465DA442,
+	U3CU3Ec__DisplayClass26_0__ctor_mF8B2EA0BA974D2401CDE747DDEBA7DB88AE28D4A,
+	U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__0_mD072B736557F40543F124CD3F03AE92DD6FA40D1,
+	U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__1_m61A6353F898D3C70DC386519937EECC223E549FC,
+	U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__2_m95F1C408FA1DE5D2EF11E0C2E2E64B558C2DAC91,
+	U3CU3Ec__DisplayClass26_0_U3CAddServerCallbacksU3Eb__3_m9408354ADF2AE7D252712A930EC654295DB40814,
+};
+static const int32_t s_InvokerIndices[38] = 
+{
+	15688,
+	9106,
+	9085,
+	7289,
+	2654,
+	3445,
+	1786,
+	2654,
+	9106,
+	9106,
+	9106,
+	9106,
+	9106,
+	9106,
+	9106,
+	8805,
+	7153,
+	7153,
+	8805,
+	9106,
+	3007,
+	9106,
+	8943,
+	8805,
+	6305,
+	7106,
+	1754,
+	9106,
+	9106,
+	5910,
+	9106,
+	8943,
+	9106,
+	9106,
+	7106,
+	1754,
+	1790,
+	7106,
+};
+IL2CPP_EXTERN_C const Il2CppCodeGenModule g_MultiplexTransport_CodeGenModule;
+const Il2CppCodeGenModule g_MultiplexTransport_CodeGenModule = 
+{
+	"MultiplexTransport.dll",
+	38,
+	s_methodPointers,
+	0,
+	NULL,
+	s_InvokerIndices,
+	0,
+	NULL,
+	0,
+	NULL,
+	0,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+};
