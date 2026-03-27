@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Mirror;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using Mirror;
+using UnityEngine.UI;
 
 public class PlayerInteraction : NetworkBehaviour
 {
@@ -17,9 +17,10 @@ public class PlayerInteraction : NetworkBehaviour
     [HideInInspector] public double lastBlockInteractionTime;
 
     private Player _player;
-
     private bool placeMode = false;
     private Button placeButton;
+    private Button inventoryCloseButton;
+    private bool buttonsLinked = false;
 
     private void Awake()
     {
@@ -29,51 +30,79 @@ public class PlayerInteraction : NetworkBehaviour
     private void Start()
     {
         if (!isOwned) return;
-        StartCoroutine(FindPlaceButton());
+        StartCoroutine(AutoFindRoutine());
     }
 
-    private IEnumerator FindPlaceButton()
+    private IEnumerator AutoFindRoutine()
     {
-        yield return new WaitForSeconds(0.5f);
-
-        GameObject btnObj = GameObject.Find("PlaceButton");
-        if (btnObj != null)
+        while (!buttonsLinked)
         {
-            placeButton = btnObj.GetComponent<Button>();
-            if (placeButton != null)
+            Button[] allButtons = Resources.FindObjectsOfTypeAll<Button>();
+
+            foreach (Button btn in allButtons)
             {
-                placeButton.onClick.RemoveAllListeners();
-                placeButton.onClick.AddListener(TogglePlaceMode);
+                if (btn.gameObject.name == "InventoryCloseButton")
+                {
+                    inventoryCloseButton = btn;
+                    inventoryCloseButton.onClick.RemoveAllListeners();
+                    inventoryCloseButton.onClick.AddListener(ForceCloseAll);
+                }
+
+                if (btn.gameObject.name == "PlaceButton")
+                {
+                    placeButton = btn;
+                    placeButton.onClick.RemoveAllListeners();
+                    placeButton.onClick.AddListener(TogglePlaceMode);
+                }
             }
+
+            if (inventoryCloseButton != null && placeButton != null)
+            {
+                buttonsLinked = true;
+            }
+
+            yield return new WaitForSeconds(1.0f);
         }
     }
 
     private void Update()
     {
         if (!isOwned) return;
+
+        if (Input.GetKeyDown(KeyCode.E))
+            ToggleInventoryLikeE();
+
         if (!CanInteractWithWorld()) return;
 
         UpdateCrosshair();
 
         Vector2 inputPos = GetInputPosition();
-        float distance = Vector2.Distance(inputPos, transform.position);
-        if (distance > Reach) return;
+        if (Vector2.Distance(inputPos, transform.position) > Reach) return;
 
         HandleInput(inputPos);
     }
 
-    public void TogglePlaceMode()
+    private void ForceCloseAll()
     {
-        placeMode = !placeMode;
-        UnityEngine.Debug.Log("Place Mode: " + placeMode);
+        Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
+        foreach (Canvas c in canvases)
+        {
+            string lowerName = c.gameObject.name.ToLower();
+            if (lowerName.Contains("chest") || lowerName.Contains("craft"))
+            {
+                c.gameObject.SetActive(false);
+            }
+        }
     }
 
-    private Vector2 GetInputPosition()
-    {
-        if (UnityEngine.Application.isMobilePlatform && Input.touchCount > 0)
-            return Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position);
+    public void TogglePlaceMode() => placeMode = !placeMode;
 
-        return Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    private void ToggleInventoryLikeE()
+    {
+        if (PlayerInstance.localPlayerInstance == null) return;
+        var inv = PlayerInstance.localPlayerInstance.GetComponent<Player>().GetInventoryHandler().GetInventory();
+        if (inv.open) inv.Close();
+        else inv.Open(PlayerInstance.localPlayerInstance);
     }
 
     private void HandleInput(Vector2 inputPos)
@@ -90,19 +119,19 @@ public class PlayerInteraction : NetworkBehaviour
 
                 if (touch.phase == TouchPhase.Began)
                 {
-                    if (placeMode)
+                    if (placeMode) { CMD_Interact(loc, 1, true); CMD_TryPlaceBlock(loc); return; }
+                    if (entity != null) CMD_HitEntity(entity);
+                    else CMD_Interact(loc, 0, true);
+                }
+                else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
+                {
+                    if (!placeMode)
                     {
-                        CMD_TryPlaceBlock(loc);
-                        return;
+                        if (entity != null) CMD_HitEntity(entity);
+                        else CMD_Interact(loc, 0, false);
                     }
-
-                    if (entity != null)
-                        CMD_HitEntity(entity);
-                    else
-                        CMD_Interact(loc, 0, true);
                 }
             }
-
             return;
         }
 
@@ -113,97 +142,34 @@ public class PlayerInteraction : NetworkBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (placeMode)
-            {
-                CMD_TryPlaceBlock(mouseLoc);
-            }
-            else if (mouseEntity != null)
-            {
-                CMD_HitEntity(mouseEntity);
-            }
-            else
-            {
-                CMD_Interact(mouseLoc, 0, true);
-            }
+            if (placeMode) { CMD_Interact(mouseLoc, 1, true); CMD_TryPlaceBlock(mouseLoc); return; }
+            if (mouseEntity != null) CMD_HitEntity(mouseEntity);
+            else CMD_Interact(mouseLoc, 0, true);
         }
-
-        if (Input.GetMouseButton(0))
+        else if (Input.GetMouseButton(0))
         {
             if (!placeMode)
             {
-                if (mouseEntity != null)
-                    CMD_HitEntity(mouseEntity);
-                else
-                    CMD_Interact(mouseLoc, 0, false);
+                if (mouseEntity != null) CMD_HitEntity(mouseEntity);
+                else CMD_Interact(mouseLoc, 0, false);
             }
         }
 
         if (Input.GetMouseButtonDown(1))
         {
-            if (!placeMode)
-            {
-                if (mouseEntity != null)
-                    CMD_InteractEntity(mouseEntity);
-                else
-                    CMD_Interact(mouseLoc, 1, true);
-            }
+            if (mouseEntity != null) CMD_InteractEntity(mouseEntity);
+            else CMD_Interact(mouseLoc, 1, true);
         }
-    }
-
-    public static Location GetBlockedTouchLocation(Vector2 touchPosition)
-    {
-        Vector2 worldPos = Camera.main.ScreenToWorldPoint(touchPosition);
-        return Location.LocationByPosition(worldPos);
-    }
-
-    public static Location GetBlockedMouseLocation()
-    {
-        Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        return Location.LocationByPosition(mousePos);
-    }
-
-    public static Entity GetEntityAtPosition(Vector2 position)
-    {
-        foreach (RaycastHit2D ray in Physics2D.RaycastAll(position, Vector2.zero))
-        {
-            Entity entity = ray.transform.GetComponent<Entity>();
-            if (entity) return entity;
-        }
-        return null;
-    }
-
-    public static bool CanInteractWithWorld()
-    {
-        if (Inventory.IsAnyOpen(PlayerInstance.localPlayerInstance)) return false;
-        if (ChatMenu.instance.open) return false;
-        if (SignEditMenu.IsLocalMenuOpen()) return false;
-        if (PauseMenu.active) return false;
-        return true;
-    }
-
-    [Server]
-    public void DoToolDurability()
-    {
-        PlayerInventory inv = _player.GetInventoryHandler().GetInventory();
-        ItemStack item = inv.GetSelectedItem();
-        item.ApplyDurability();
-        inv.SetItem(inv.selectedSlot, item);
     }
 
     [Command]
     public void CMD_HitEntity(Entity entity)
     {
         float damage = _player.GetInventoryHandler().GetInventory().GetSelectedItem().GetItemEntityDamage();
-        if (_player.GetVelocity().y < -0.5f)
-        {
-            damage *= 1.5f;
-            entity.GetComponent<EntityParticleEffects>()?.RPC_CriticalDamageEffect();
-        }
-
         Sound.Play(_player.Location, "entity/player/swing", SoundType.Entities, 0.8f, 1.2f);
         _player.ShakeOwnerCamera(.5f);
         DoToolDurability();
-        entity.transform.GetComponent<Entity>().Hit(damage, _player);
+        entity.Hit(damage, _player);
         lastHitTime = NetworkTime.time;
     }
 
@@ -217,12 +183,12 @@ public class PlayerInteraction : NetworkBehaviour
     [Command]
     public void CMD_Interact(Location loc, int mouseButton, bool firstFrameDown)
     {
-        Type itemType = Type.GetType(_player.GetInventoryHandler().GetInventory().GetSelectedItem().material.ToString());
-        if (!itemType.IsSubclassOf(typeof(Item))) itemType = typeof(Item);
+        string matName = _player.GetInventoryHandler().GetInventory().GetSelectedItem().material.ToString();
+        Type itemType = Type.GetType(matName);
+        if (itemType == null || !itemType.IsSubclassOf(typeof(Item))) itemType = typeof(Item);
 
         Item item = (Item)Activator.CreateInstance(itemType);
-        PlayerInstance player = _player.playerInstance;
-        item.Interact(player, loc, mouseButton, firstFrameDown);
+        item.Interact(_player.playerInstance, loc, mouseButton, firstFrameDown);
         lastBlockHitTime = NetworkTime.time;
     }
 
@@ -230,54 +196,63 @@ public class PlayerInteraction : NetworkBehaviour
     public void CMD_TryPlaceBlock(Location loc)
     {
         ItemStack selectedItem = _player.GetInventoryHandler().GetInventory().GetSelectedItem();
+        if (selectedItem.material == Material.Air || selectedItem.Amount < 1) return;
 
-        if (selectedItem.material == Material.Air) return;
-        if (selectedItem.Amount < 1) return;
+        Type blockType = Type.GetType(selectedItem.material.ToString());
+        if (blockType == null) return;
 
-        Material materialToPlace = selectedItem.material;
-        Type materialType = Type.GetType(selectedItem.material.ToString());
-
-        if (materialType.IsSubclassOf(typeof(Item)))
-            if (materialType.IsSubclassOf(typeof(PlaceableItem)))
-                materialToPlace = ((PlaceableItem)Activator.CreateInstance(materialType)).blockMaterial;
-            else
-                return;
-
-        Block blockClass = (Block)Activator.CreateInstance(Type.GetType(materialToPlace.ToString()));
+        Block blockClass = (Block)Activator.CreateInstance(blockType);
         if (!blockClass.CanExistAt(loc)) return;
 
         Block currentBlock = loc.GetBlock();
         if (currentBlock != null && !currentBlock.CanBeOverriden) return;
 
-        loc.SetMaterial(materialToPlace);
+        loc.SetMaterial(selectedItem.material);
         loc.GetBlock().BuildTick();
         loc.Tick();
 
         _player.GetInventoryHandler().GetInventory().ConsumeSelectedItem();
-
         lastBlockInteractionTime = NetworkTime.time;
     }
 
+    [Server]
+    public void DoToolDurability()
+    {
+        PlayerInventory inv = _player.GetInventoryHandler().GetInventory();
+        ItemStack item = inv.GetSelectedItem();
+        item.ApplyDurability();
+        inv.SetItem(inv.selectedSlot, item);
+    }
+
+    public static Location GetBlockedTouchLocation(Vector2 pos) => Location.LocationByPosition(Camera.main.ScreenToWorldPoint(pos));
+    public static Location GetBlockedMouseLocation() => Location.LocationByPosition(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+    private Vector2 GetInputPosition() => (UnityEngine.Application.isMobilePlatform && Input.touchCount > 0) ? (Vector2)Camera.main.ScreenToWorldPoint(Input.GetTouch(0).position) : (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+    public static Entity GetEntityAtPosition(Vector2 position)
+    {
+        foreach (RaycastHit2D ray in Physics2D.RaycastAll(position, Vector2.zero))
+        {
+            Entity entity = ray.transform.GetComponent<Entity>();
+            if (entity) return entity;
+        }
+        return null;
+    }
+
+    public static bool CanInteractWithWorld() => !Inventory.IsAnyOpen(PlayerInstance.localPlayerInstance);
+
     private void UpdateCrosshair()
     {
-        if (crosshair == null)
-            crosshair = Instantiate(Resources.Load<GameObject>("Prefabs/Crosshair"));
-
-        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        bool isInRange = Vector2.Distance(mousePosition, transform.position) <= Reach;
-        Entity mouseEntity = GetEntityAtPosition(mousePosition);
-
-        string spriteName = "empty";
-        if (isInRange)
-            spriteName = mouseEntity == null ? "full" : "entity";
-
+        if (crosshair == null) crosshair = Instantiate(Resources.Load<GameObject>("Prefabs/Crosshair"));
+        Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        bool range = Vector2.Distance(mousePos, transform.position) <= Reach;
+        string name = range ? (GetEntityAtPosition(mousePos) == null ? "full" : "entity") : "empty";
         crosshair.transform.position = GetBlockedMouseLocation().GetPosition();
-        crosshair.GetComponent<SpriteRenderer>().sprite =
-            Resources.Load<Sprite>("Sprites/crosshair_" + spriteName);
+        crosshair.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("Sprites/crosshair_" + name);
     }
 
     private void OnDestroy()
     {
-        Destroy(crosshair);
+        if (crosshair != null) Destroy(crosshair);
+        if (inventoryCloseButton != null) inventoryCloseButton.onClick.RemoveListener(ForceCloseAll);
     }
 }

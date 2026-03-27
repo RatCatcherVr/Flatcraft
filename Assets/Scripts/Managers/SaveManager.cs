@@ -2,13 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using Mirror;
 using UnityEngine;
 
 public class SaveManager : NetworkBehaviour
 {
-    public static float AutosaveDuration = 2;
+    public static float AutosaveDuration = 2f;
     public static List<BlockChange> unsavedBlockChanges = new List<BlockChange>();
 
     private void Start()
@@ -17,34 +16,28 @@ public class SaveManager : NetworkBehaviour
             StartCoroutine(SaveLoop());
     }
 
+    private void OnApplicationQuit()
+    {
+        if (isServer)
+            StartCoroutine(SaveAllImmediately());
+    }
+
     private IEnumerator SaveLoop()
     {
         while (true)
         {
             yield return new WaitForSecondsRealtime(AutosaveDuration);
 
-            //Save Block Changes
             if (unsavedBlockChanges.Count > 0)
             {
                 List<BlockChange> blockChangesCopy = new List<BlockChange>(unsavedBlockChanges);
                 unsavedBlockChanges.Clear();
-                Thread worldThread = new Thread(() => { SaveBlockChanges(blockChangesCopy); });
-                worldThread.Start();
-
-                while (worldThread.IsAlive)
-                    yield return new WaitForSeconds(0.1f);
+                yield return StartCoroutine(SaveBlockChangesCoroutine(blockChangesCopy));
             }
 
-            //Save Entities
             List<Entity> entities = new List<Entity>(Entity.entities);
+            yield return StartCoroutine(SaveEntitiesCoroutine(entities));
 
-            Thread entityThread = new Thread(() => { SaveEntities(entities); });
-            entityThread.Start();
-
-            while (entityThread.IsAlive)
-                yield return new WaitForSeconds(0.1f);
-
-            //Delete no longer present entities
             foreach (Chunk chunk in WorldManager.instance.chunks.Values)
             {
                 chunk.DeleteNoLongerPresentEntitiesSaves();
@@ -52,84 +45,89 @@ public class SaveManager : NetworkBehaviour
         }
     }
 
-    public static void SaveEntities(List<Entity> entities)
+    private IEnumerator SaveAllImmediately()
+    {
+        if (unsavedBlockChanges.Count > 0)
+        {
+            List<BlockChange> blockChangesCopy = new List<BlockChange>(unsavedBlockChanges);
+            unsavedBlockChanges.Clear();
+            yield return StartCoroutine(SaveBlockChangesCoroutine(blockChangesCopy));
+        }
+
+        List<Entity> entities = new List<Entity>(Entity.entities);
+        yield return StartCoroutine(SaveEntitiesCoroutine(entities));
+    }
+
+    private IEnumerator SaveEntitiesCoroutine(List<Entity> entities)
     {
         foreach (Entity e in entities)
+        {
             try
             {
                 e.Save();
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogWarning("Error in saving entity: " + ex.StackTrace);
+                UnityEngine.Debug.LogWarning("Error saving entity: " + ex.StackTrace);
             }
+            yield return null;
+        }
     }
 
-    public static void SaveBlockChanges(List<BlockChange> changes)
+    private IEnumerator SaveBlockChangesCoroutine(List<BlockChange> changes)
     {
-        //Get all changed chunks
         Dictionary<ChunkPosition, List<BlockChange>> chunkBlockChanges = new Dictionary<ChunkPosition, List<BlockChange>>();
-
         foreach (BlockChange blockChange in changes)
         {
             ChunkPosition chunkPos = new ChunkPosition(blockChange.location);
-
             if (!chunkBlockChanges.ContainsKey(chunkPos))
                 chunkBlockChanges.Add(chunkPos, new List<BlockChange>());
-
             chunkBlockChanges[chunkPos].Add(blockChange);
         }
 
-        foreach (ChunkPosition changedChunk in chunkBlockChanges.Keys)
+        foreach (var kvp in chunkBlockChanges)
         {
+            ChunkPosition chunkPos = kvp.Key;
+            List<BlockChange> newChanges = kvp.Value;
+
+            string chunkDir = Path.Combine(UnityEngine.Application.persistentDataPath, "chunks", chunkPos.dimension.ToString(), chunkPos.chunkX.ToString());
+            if (!Directory.Exists(chunkDir)) Directory.CreateDirectory(chunkDir);
+
             Dictionary<Location, BlockState> chunkBlockStates = new Dictionary<Location, BlockState>();
+            string blockFile = Path.Combine(chunkDir, "blocks");
 
-            if (!changedChunk.HasBeenSaved())
-                changedChunk.CreateChunkPath();
-
-            string changedChunkFilePath =
-                UnityEngine.Application.persistentDataPath + "/chunks/" + changedChunk.dimension + "/" + changedChunk.chunkX;
-
-            if (Directory.Exists(changedChunkFilePath + "/blocks"))
+            if (File.Exists(blockFile))
             {
-                try
+                string[] lines = File.ReadAllLines(blockFile);
+                foreach (string line in lines)
                 {
-                    foreach (string line in File.ReadAllLines(changedChunkFilePath + "/blocks"))
-                    {
-                        Location lineLocation = new Location(
-                            int.Parse(line.Split('*')[0].Split(',')[0]),
-                            int.Parse(line.Split('*')[0].Split(',')[1])
-                        );
-                        string lineBlockSaveString = line.Split('*')[1] + "*" + line.Split('*')[2];
-                        BlockState blockState = new BlockState(lineBlockSaveString);
-
-                        chunkBlockStates[lineLocation] = blockState;
-                    }
-                }
-                catch (Exception e)
-                {
-                    UnityEngine.Debug.LogError("Error loading block state: " + e.Message + e.StackTrace);
+                    string[] split = line.Split('*');
+                    string[] pos = split[0].Split(',');
+                    Location loc = new Location(int.Parse(pos[0]), int.Parse(pos[1]));
+                    BlockState state = new BlockState(split[1] + "*" + split[2]);
+                    chunkBlockStates[loc] = state;
                 }
             }
 
-            List<BlockChange> newBlockChangesForChunk = chunkBlockChanges[changedChunk];
-
-            foreach (var blockChange in newBlockChangesForChunk)
+            foreach (var blockChange in newChanges)
             {
                 chunkBlockStates[blockChange.location] = blockChange.newBlockState;
             }
 
-            Directory.CreateDirectory(changedChunkFilePath);
-
-            using (TextWriter c = new StreamWriter(changedChunkFilePath + "/blocks"))
+            using (TextWriter writer = new StreamWriter(blockFile))
             {
-                foreach (Location location in chunkBlockStates.Keys)
-                    c.WriteLine(location.x + "," + location.y + "*" + chunkBlockStates[location].GetSaveString());
+                foreach (var kv in chunkBlockStates)
+                {
+                    writer.WriteLine(kv.Key.x + "," + kv.Key.y + "*" + kv.Value.GetSaveString());
+                }
             }
+
+            yield return null;
         }
     }
 }
 
+[Serializable]
 public struct BlockChange
 {
     public Location location;

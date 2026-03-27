@@ -51,7 +51,8 @@ public class PlayerInventoryHandler : NetworkBehaviour
             if (_closeButton != null)
             {
                 _closeButton.onClick.RemoveAllListeners();
-                _closeButton.onClick.AddListener(MobileCloseInventory);
+                _closeButton.onClick.AddListener(MobileCloseAllMenus);
+                _closeButton.gameObject.SetActive(false);
             }
         }
 
@@ -76,8 +77,6 @@ public class PlayerInventoryHandler : NetworkBehaviour
                 _prevSlotButton.onClick.AddListener(PreviousSlot);
             }
         }
-
-        if (_closeButton != null) _closeButton.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -89,19 +88,23 @@ public class PlayerInventoryHandler : NetworkBehaviour
         ActionBarMessageUpdate();
 
         bool inventoryOpen = Inventory.IsAnyOpen(_player.playerInstance);
+        bool anyMenuOpen = inventoryOpen ||
+                           (ChatMenu.instance != null && ChatMenu.instance.open) ||
+                           SignEditMenu.IsLocalMenuOpen() ||
+                           PauseMenu.active;
 
         if (inventoryOpen)
         {
             _framesSinceInventoryOpen = 0;
             if (_openButton != null) _openButton.gameObject.SetActive(false);
-            if (_closeButton != null) _closeButton.gameObject.SetActive(true);
         }
         else
         {
             _framesSinceInventoryOpen++;
             if (_openButton != null) _openButton.gameObject.SetActive(true);
-            if (_closeButton != null) _closeButton.gameObject.SetActive(false);
         }
+
+        if (_closeButton != null) _closeButton.gameObject.SetActive(anyMenuOpen);
 
         PerformInput();
     }
@@ -119,7 +122,6 @@ public class PlayerInventoryHandler : NetworkBehaviour
             {
                 int newSelectedSlot = GetInventory().selectedSlot + (int)scrollAmount;
                 newSelectedSlot = (newSelectedSlot + 9) % 9;
-
                 CMD_UpdateSelectedSlot(newSelectedSlot);
             }
         }
@@ -159,13 +161,32 @@ public class PlayerInventoryHandler : NetworkBehaviour
             CMD_OpenInventory();
     }
 
-    public void MobileCloseInventory()
+    public void MobileCloseAllMenus()
     {
         if (!isOwned) return;
 
+        // Close Inventory
         PlayerInventory inv = GetInventory();
         if (Inventory.IsAnyOpen(_player.playerInstance))
             inv.Close();
+
+        // Close Chat Menu
+        if (ChatMenu.instance != null)
+            ChatMenu.instance.open = false;
+
+        // Close Sign Edit Menu
+        if (SignEditMenu.IsLocalMenuOpen())
+        {
+            var signMenu = GameObject.FindObjectOfType<SignEditMenu>();
+            if (signMenu != null)
+                signMenu.gameObject.SetActive(false);
+        }
+
+        // Close Pause Menu
+        PauseMenu.active = false;
+
+        // Hide the close button automatically
+        if (_closeButton != null) _closeButton.gameObject.SetActive(false);
     }
 
     private void HotbarSlotInput()

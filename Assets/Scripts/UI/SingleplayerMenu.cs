@@ -7,16 +7,16 @@ public class SingleplayerMenu : MonoBehaviour
 {
     public GameObject deleteWorldMenuPrefab;
     public GameObject createWorldMenuPrefab;
-    
-    [Space][Space]
-    
+
+    [Space]
+    [Space]
+
     public Transform list;
     public int selectedWorld = -1;
     public GameObject worldPrefab;
     public List<World> worlds = new List<World>();
     public Button playButton;
     public Button deleteButton;
-
 
     private void Start()
     {
@@ -31,16 +31,28 @@ public class SingleplayerMenu : MonoBehaviour
 
     public void LoadWorlds()
     {
-        //Fetch worlds
-        worlds = GetWorlds();   
-        
-        //Sort by last modified
+        worlds = GetWorlds();
         worlds.Sort((a, b) => b.lastModifiedUTC.CompareTo(a.lastModifiedUTC));
 
-        //Create new world buttons
-        foreach (World world in worlds)
+        foreach (Transform child in list) Destroy(child.gameObject);
+
+        for (int i = 0; i < worlds.Count; i++)
         {
+            int index = i;
             GameObject obj = Instantiate(worldPrefab, list, false);
+
+            UnityEngine.UI.Text worldNameText = obj.GetComponentInChildren<UnityEngine.UI.Text>();
+            if (worldNameText != null) worldNameText.text = worlds[i].name;
+
+            Button btn = obj.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() =>
+                {
+                    selectedWorld = index;
+                });
+            }
         }
     }
 
@@ -57,13 +69,17 @@ public class SingleplayerMenu : MonoBehaviour
     public void Play()
     {
         Sound.PlayLocal(new Location(), "menu/click", 0, SoundType.Menu, 1f, 100000f, false);
+        if (selectedWorld < 0 || selectedWorld >= worlds.Count) return;
+
         WorldManager.world = worlds[selectedWorld];
-        MultiplayerManager.HostGameAsync();
         LoadingMenu.Create(LoadingMenuType.LoadWorld);
+        MultiplayerManager.HostGameAsync();
     }
 
     public void Delete()
     {
+        if (selectedWorld < 0 || selectedWorld >= worlds.Count) return;
+
         DeleteWorldMenu.SelectedWorld = worlds[selectedWorld];
         Instantiate(deleteWorldMenuPrefab);
         Destroy(gameObject);
