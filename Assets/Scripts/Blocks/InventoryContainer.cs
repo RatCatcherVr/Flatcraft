@@ -1,4 +1,6 @@
 ﻿using System;
+using Mirror;
+using UnityEngine;
 
 public class InventoryContainer : Block
 {
@@ -6,24 +8,22 @@ public class InventoryContainer : Block
     {
         base.ServerInitialize();
 
-        //Create inventory if none has been assigned
         if (!GetData().HasTag("inventoryId"))
         {
             Inventory inv = NewInventory();
             location.SetData(GetData().SetTag("inventoryId", inv.id.ToString()));
         }
-        //Fill with items if we have a loottable
+
         if (GetData().HasTag("loottable"))
         {
             string loottableName = GetData().GetTag("loottable");
             Loottable loottable = Loottable.Load(loottableName);
             Inventory inv = GetInventory();
-            Random random = new Random();
-            //For each loottable item
+            System.Random random = new System.Random();
+
             foreach (ItemStack item in loottable.GetRandomItems())
             {
-                //Keep on trying to find an empty slot to populate
-                for(int attempts = 0; attempts < 5; attempts++)
+                for (int attempts = 0; attempts < 5; attempts++)
                 {
                     int slot = random.Next(0, inv.size);
                     if (inv.GetItem(slot).material == Material.Air)
@@ -35,8 +35,6 @@ public class InventoryContainer : Block
             }
             location.SetData(GetData().RemoveTag("loottable"));
         }
-
-        GetInventory();
     }
 
     public virtual Inventory NewInventory()
@@ -56,8 +54,8 @@ public class InventoryContainer : Block
     {
         base.Interact(player);
 
-        GetInventory().Open(player);
         GetInventory().holder = location;
+        GetInventory().Open(player);
     }
 
     public Inventory GetInventory()

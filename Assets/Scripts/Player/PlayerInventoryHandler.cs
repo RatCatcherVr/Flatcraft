@@ -91,9 +91,10 @@ public class PlayerInventoryHandler : NetworkBehaviour
         bool anyMenuOpen = inventoryOpen ||
                            (ChatMenu.instance != null && ChatMenu.instance.open) ||
                            SignEditMenu.IsLocalMenuOpen() ||
-                           PauseMenu.active;
+                           PauseMenu.active ||
+                           GameObject.Find("ContainerInventoryMenu(Clone)") != null; // Stay "Open" if the clone is there
 
-        if (inventoryOpen)
+        if (inventoryOpen || anyMenuOpen)
         {
             _framesSinceInventoryOpen = 0;
             if (_openButton != null) _openButton.gameObject.SetActive(false);
@@ -127,7 +128,12 @@ public class PlayerInventoryHandler : NetworkBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.E) && _framesSinceInventoryOpen > 10)
-            CMD_OpenInventory();
+        {
+            if (Inventory.IsAnyOpen(_player.playerInstance))
+                MobileCloseAllMenus();
+            else
+                CMD_OpenInventory();
+        }
 
         if (!canInteract) return;
 
@@ -140,7 +146,6 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public void NextSlot()
     {
         if (!isOwned) return;
-
         int newSlot = (GetInventory().selectedSlot + 1) % 9;
         CMD_UpdateSelectedSlot(newSlot);
     }
@@ -148,7 +153,6 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public void PreviousSlot()
     {
         if (!isOwned) return;
-
         int newSlot = (GetInventory().selectedSlot - 1 + 9) % 9;
         CMD_UpdateSelectedSlot(newSlot);
     }
@@ -156,7 +160,6 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public void MobileOpenInventory()
     {
         if (!isOwned) return;
-
         if (_framesSinceInventoryOpen > 10)
             CMD_OpenInventory();
     }
@@ -165,34 +168,37 @@ public class PlayerInventoryHandler : NetworkBehaviour
     {
         if (!isOwned) return;
 
-        // Close Inventory
+        // 1. Force the logic to close
         PlayerInventory inv = GetInventory();
-        if (Inventory.IsAnyOpen(_player.playerInstance))
-            inv.Close();
+        if (inv != null) inv.Close();
 
-        // Close Chat Menu
-        if (ChatMenu.instance != null)
-            ChatMenu.instance.open = false;
+        // 2. Destroy the physical menu clones
+        GameObject containerUI = GameObject.Find("ContainerInventoryMenu(Clone)");
+        if (containerUI != null) Destroy(containerUI);
 
-        // Close Sign Edit Menu
+        GameObject craftingUI = GameObject.Find("CraftingInventoryMenu(Clone)");
+        if (craftingUI != null) Destroy(craftingUI);
+
+        // 3. Reset the frames and static variables
+        _framesSinceInventoryOpen = 11; // Setting this higher than 10 unlocks input
+
+        if (ChatMenu.instance != null) ChatMenu.instance.open = false;
+
         if (SignEditMenu.IsLocalMenuOpen())
         {
             var signMenu = GameObject.FindObjectOfType<SignEditMenu>();
-            if (signMenu != null)
-                signMenu.gameObject.SetActive(false);
+            if (signMenu != null) signMenu.gameObject.SetActive(false);
         }
 
-        // Close Pause Menu
         PauseMenu.active = false;
 
-        // Hide the close button automatically
         if (_closeButton != null) _closeButton.gameObject.SetActive(false);
+        if (_openButton != null) _openButton.gameObject.SetActive(true);
     }
 
     private void HotbarSlotInput()
     {
         KeyCode[] numpadCodes = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9 };
-
         foreach (KeyCode keyCode in numpadCodes)
             if (Input.GetKeyDown(keyCode))
                 CMD_UpdateSelectedSlot(Array.IndexOf(numpadCodes, keyCode));
@@ -202,10 +208,8 @@ public class PlayerInventoryHandler : NetworkBehaviour
     private void ActionBarMessageUpdate()
     {
         Material selectedMaterial = GetInventory().GetSelectedItem().material;
-
         if (selectedMaterial != _actionBarLastSelectedMaterial && selectedMaterial != Material.Air)
             ActionBar.message = selectedMaterial.ToString().Replace('_', ' ');
-
         _actionBarLastSelectedMaterial = selectedMaterial;
     }
 
@@ -213,11 +217,8 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public void CMD_DropSelected()
     {
         ItemStack selectedItem = GetInventory().GetSelectedItem();
+        if (selectedItem.Amount <= 0) return;
         ItemStack droppedItem = selectedItem;
-
-        if (droppedItem.Amount <= 0)
-            return;
-
         droppedItem.Amount = 1;
         selectedItem.Amount--;
         DropItem(droppedItem);
@@ -227,12 +228,8 @@ public class PlayerInventoryHandler : NetworkBehaviour
     [Server]
     public void DropItem(ItemStack item)
     {
-        ItemStack droppedItem = item;
-
-        droppedItem.Drop(
-            _player.Location + new Location(1 * (_player.facingLeft ? -1 : 1), 1),
-            new Vector2(3 * (_player.facingLeft ? -1 : 1), 0f)
-        );
+        item.Drop(_player.Location + new Location(1 * (_player.facingLeft ? -1 : 1), 1),
+                  new Vector2(3 * (_player.facingLeft ? -1 : 1), 0f));
     }
 
     [Command]
@@ -250,13 +247,11 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public PlayerInventory GetInventory()
     {
         Inventory inventory = Inventory.Get(_player.inventoryId);
-
         if (inventory == null)
         {
             inventory = PlayerInventory.CreatePreset();
             _player.inventoryId = inventory.id;
         }
-
         return (PlayerInventory)inventory;
     }
 }

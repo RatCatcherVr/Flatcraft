@@ -84,6 +84,18 @@ public class PlayerInteraction : NetworkBehaviour
 
     private void ForceCloseAll()
     {
+        PlayerInventory inv = _player.GetInventoryHandler().GetInventory();
+        if (inv != null) inv.Close();
+
+        GameObject containerUI = GameObject.Find("ContainerInventoryMenu(Clone)");
+        if (containerUI != null) Destroy(containerUI);
+
+        GameObject craftingUI = GameObject.Find("CraftingInventoryMenu(Clone)");
+        if (craftingUI != null) Destroy(craftingUI);
+
+        if (ChatMenu.instance != null) ChatMenu.instance.open = false;
+        PauseMenu.active = false;
+
         Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
         foreach (Canvas c in canvases)
         {
@@ -100,9 +112,14 @@ public class PlayerInteraction : NetworkBehaviour
     private void ToggleInventoryLikeE()
     {
         if (PlayerInstance.localPlayerInstance == null) return;
-        var inv = PlayerInstance.localPlayerInstance.GetComponent<Player>().GetInventoryHandler().GetInventory();
-        if (inv.open) inv.Close();
-        else inv.Open(PlayerInstance.localPlayerInstance);
+
+        PlayerInventory inv = _player.GetInventoryHandler().GetInventory();
+        bool isContainerOpen = GameObject.Find("ContainerInventoryMenu(Clone)") != null;
+
+        if (inv.open || isContainerOpen)
+            ForceCloseAll();
+        else
+            inv.Open(PlayerInstance.localPlayerInstance);
     }
 
     private void HandleInput(Vector2 inputPos)
@@ -238,7 +255,11 @@ public class PlayerInteraction : NetworkBehaviour
         return null;
     }
 
-    public static bool CanInteractWithWorld() => !Inventory.IsAnyOpen(PlayerInstance.localPlayerInstance);
+    public static bool CanInteractWithWorld()
+    {
+        if (PlayerInstance.localPlayerInstance == null) return true;
+        return !Inventory.IsAnyOpen(PlayerInstance.localPlayerInstance) && GameObject.Find("ContainerInventoryMenu(Clone)") == null;
+    }
 
     private void UpdateCrosshair()
     {

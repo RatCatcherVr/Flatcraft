@@ -36,7 +36,7 @@ public class Chest : InventoryContainer
     {
         if (!GetData().HasTag("inventoryId"))
             return false;
-        
+
         return GetInventory().open;
     }
 
@@ -44,7 +44,7 @@ public class Chest : InventoryContainer
     {
         //Wait for chest values to sync from server
         yield return new WaitForSeconds(1f);
-        
+
         bool lastCheckOpen = IsOpen();
         while (true)
         {

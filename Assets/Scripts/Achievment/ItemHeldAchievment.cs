@@ -16,6 +16,7 @@ public class ItemHeldAchievement : Achievement
         if (!playerEntity) return;
 
         PlayerInventory inventory = playerEntity.GetInventoryHandler().GetInventory();
+        // inventory.Contains is now available via base Inventory class
         if (inventory == null) return;
 
         foreach (Material matAlternative in materialCriteria)
@@ -30,9 +31,7 @@ public class ItemHeldAchievement : Achievement
 
     private void GrantAchievement()
     {
-#if !DISABLESTEAMWORKS
         UnityEngine.Debug.Log("Granted achievement: " + achievementId);
-#endif
     }
 #endif
 }
