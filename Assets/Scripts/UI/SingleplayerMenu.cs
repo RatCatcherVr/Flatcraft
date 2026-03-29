@@ -1,22 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class SingleplayerMenu : MonoBehaviour
 {
     public GameObject deleteWorldMenuPrefab;
-    public GameObject createWorldMenuPrefab;
-
-    [Space]
-    [Space]
-
     public Transform list;
-    public int selectedWorld = -1;
     public GameObject worldPrefab;
-    public List<World> worlds = new List<World>();
     public Button playButton;
     public Button deleteButton;
+    public int selectedWorld = -1;
+    public List<World> worlds = new List<World>();
 
     private void Start()
     {
@@ -68,7 +63,6 @@ public class SingleplayerMenu : MonoBehaviour
 
     public void Play()
     {
-        Sound.PlayLocal(new Location(), "menu/click", 0, SoundType.Menu, 1f, 100000f, false);
         if (selectedWorld < 0 || selectedWorld >= worlds.Count) return;
 
         WorldManager.world = worlds[selectedWorld];
@@ -87,7 +81,22 @@ public class SingleplayerMenu : MonoBehaviour
 
     public void Create()
     {
-        Instantiate(createWorldMenuPrefab);
-        Destroy(gameObject);
+        World world = new World();
+
+        string baseName = "World";
+        string uniqueName = baseName;
+        int counter = 1;
+        while (World.WorldExists(uniqueName))
+        {
+            uniqueName = baseName + counter;
+            counter++;
+        }
+        world.name = uniqueName;
+        world.seed = new System.Random().Next();
+        world.SaveData();
+
+        WorldManager.world = world;
+        MultiplayerManager.HostGameAsync();
+        LoadingMenu.Create(LoadingMenuType.LoadWorld);
     }
 }
