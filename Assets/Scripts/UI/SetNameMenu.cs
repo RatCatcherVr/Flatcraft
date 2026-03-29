@@ -17,7 +17,11 @@ public class SetNameMenu : MonoBehaviour
 
     private void SetName(string name)
     {
-        string testingNamePath = Application.persistentDataPath + "\\playerProfile.dat";
+        // Use Path.Combine to handle platform-specific separators
+        string testingNamePath = Path.Combine(Application.persistentDataPath, "playerProfile.dat");
         File.WriteAllText(testingNamePath, name);
+
+        // Optional: force flush to make sure iOS saves it immediately
+        // File.WriteAllText does this normally, but iOS can be weird
     }
 }
