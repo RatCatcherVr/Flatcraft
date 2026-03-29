@@ -1,27 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using System.Collections;
 
 public class SetNameMenu : MonoBehaviour
 {
-    public InputField nameField;
-
-    public void DoneButton()
+    void Start()
     {
-        SetName(nameField.text);
-        SceneManager.LoadScene("Boot");
+        string path = Path.Combine(Application.persistentDataPath, "playerProfile.dat");
+        if (!File.Exists(path))
+        {
+            File.WriteAllText(path, "Player");
+        }
+        StartCoroutine(LoadNextScene("Boot"));
     }
 
-    private void SetName(string name)
+    private IEnumerator LoadNextScene(string sceneName)
     {
-        // Use Path.Combine to handle platform-specific separators
-        string testingNamePath = Path.Combine(Application.persistentDataPath, "playerProfile.dat");
-        File.WriteAllText(testingNamePath, name);
-
-        // Optional: force flush to make sure iOS saves it immediately
-        // File.WriteAllText does this normally, but iOS can be weird
+        yield return null; // wait a frame for iOS
+        SceneManager.LoadScene(sceneName);
     }
 }
