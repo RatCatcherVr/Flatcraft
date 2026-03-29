@@ -174,8 +174,15 @@ public class PlayerInteraction : NetworkBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            if (mouseEntity != null) CMD_InteractEntity(mouseEntity);
-            else CMD_Interact(mouseLoc, 1, true);
+            if (!UnityEngine.Application.isMobilePlatform)
+            {
+                TogglePlaceMode();
+            }
+            else
+            {
+                if (mouseEntity != null) CMD_InteractEntity(mouseEntity);
+                else CMD_Interact(mouseLoc, 1, true);
+            }
         }
     }
 

@@ -1,23 +1,23 @@
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
+using UnityEngine.UI;
 
 public class SetNameMenu : MonoBehaviour
 {
-    void Start()
+    public InputField nameField;
+
+    public void DoneButton()
     {
-        string path = Path.Combine(Application.persistentDataPath, "playerProfile.dat");
-        if (!File.Exists(path))
-        {
-            File.WriteAllText(path, "Player");
-        }
-        StartCoroutine(LoadNextScene("Boot"));
+        SetName(nameField.text);
+        SceneManager.LoadScene("Boot");
     }
 
-    private IEnumerator LoadNextScene(string sceneName)
+    private void SetName(string name)
     {
-        yield return null; // wait a frame for iOS
-        SceneManager.LoadScene(sceneName);
+        string testingNamePath = Application.persistentDataPath + "\\playerProfile.dat";
+        File.WriteAllText(testingNamePath, name);
     }
 }

@@ -1,25 +1,51 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using UnityEngine.SceneManagement;
+using UnityEngine;
 
 public class Boot : MonoBehaviour
 {
+    private const string TestWorldName = "Test";
+
+    public bool autoloadTestWorld;
+
     void Start()
     {
-        string profilePath = Path.Combine(Application.persistentDataPath, "playerProfile.dat");
-        if (!File.Exists(profilePath))
-        {
-            File.WriteAllText(profilePath, "Player");
-        }
+        //Option to immediately load test world in editor
+        if (CreateNameCheck()) return;
+        if (TryLoadTestWorld()) return;
 
-        StartCoroutine(LoadMainMenu());
+        SceneManager.LoadScene("MainMenu");//Load main menu first, so it is active
+        SceneManager.LoadScene("Intro", LoadSceneMode.Additive);
     }
 
-    private IEnumerator LoadMainMenu()
+    private bool CreateNameCheck()
     {
-        yield return null; // wait a frame for iOS
-        SceneManager.LoadScene("MainMenu");
-        SceneManager.LoadScene("Intro", LoadSceneMode.Additive);
+        string testingNamePath = Application.persistentDataPath + "\\playerProfile.dat";
+        if (!File.Exists(testingNamePath))
+        {
+            SceneManager.LoadScene("SetName");
+            return true;
+        }
+
+        SettingsManager.PlayerName = File.ReadAllText(testingNamePath);
+        return false;
+    }
+
+    private bool TryLoadTestWorld()
+    {
+        if (autoloadTestWorld && Application.isEditor)
+        {
+            if (World.WorldExists(TestWorldName))
+                WorldManager.world = World.LoadWorld(TestWorldName);
+            else
+                WorldManager.world = new World(TestWorldName, (new System.Random()).Next());
+
+            MultiplayerManager.HostGameAsync();
+            return true;
+        }
+
+        return false;
     }
 }
