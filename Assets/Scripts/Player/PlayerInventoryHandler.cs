@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
+using Mirror;
 
 public class PlayerInventoryHandler : NetworkBehaviour
 {
     private Material _actionBarLastSelectedMaterial;
     private int _framesSinceInventoryOpen;
-
     private Player _player;
 
     private Button _openButton;
     private Button _closeButton;
-
     private Button _nextSlotButton;
     private Button _prevSlotButton;
+    private Button _splitButton;
 
     private void Awake()
     {
@@ -33,79 +31,40 @@ public class PlayerInventoryHandler : NetworkBehaviour
     {
         yield return new WaitForSeconds(0.5f);
 
-        GameObject openObj = GameObject.Find("InventoryButton");
-        if (openObj != null)
+        _openButton = GameObject.Find("InventoryButton")?.GetComponent<Button>();
+        _closeButton = GameObject.Find("InventoryCloseButton")?.GetComponent<Button>();
+        _nextSlotButton = GameObject.Find("NextSlotButton")?.GetComponent<Button>();
+        _prevSlotButton = GameObject.Find("PrevSlotButton")?.GetComponent<Button>();
+        _splitButton = GameObject.Find("SplitStackButton")?.GetComponent<Button>();
+
+        _openButton?.onClick.AddListener(MobileOpenInventory);
+
+        if (_closeButton != null)
         {
-            _openButton = openObj.GetComponent<Button>();
-            if (_openButton != null)
-            {
-                _openButton.onClick.RemoveAllListeners();
-                _openButton.onClick.AddListener(MobileOpenInventory);
-            }
+            _closeButton.onClick.RemoveAllListeners();
+            _closeButton.onClick.AddListener(MobileCloseAllMenus);
+            _closeButton.gameObject.SetActive(false);
         }
 
-        GameObject closeObj = GameObject.Find("InventoryCloseButton");
-        if (closeObj != null)
-        {
-            _closeButton = closeObj.GetComponent<Button>();
-            if (_closeButton != null)
-            {
-                _closeButton.onClick.RemoveAllListeners();
-                _closeButton.onClick.AddListener(MobileCloseAllMenus);
-                _closeButton.gameObject.SetActive(false);
-            }
-        }
-
-        GameObject nextObj = GameObject.Find("NextSlotButton");
-        if (nextObj != null)
-        {
-            _nextSlotButton = nextObj.GetComponent<Button>();
-            if (_nextSlotButton != null)
-            {
-                _nextSlotButton.onClick.RemoveAllListeners();
-                _nextSlotButton.onClick.AddListener(NextSlot);
-            }
-        }
-
-        GameObject prevObj = GameObject.Find("PrevSlotButton");
-        if (prevObj != null)
-        {
-            _prevSlotButton = prevObj.GetComponent<Button>();
-            if (_prevSlotButton != null)
-            {
-                _prevSlotButton.onClick.RemoveAllListeners();
-                _prevSlotButton.onClick.AddListener(PreviousSlot);
-            }
-        }
+        _nextSlotButton?.onClick.AddListener(NextSlot);
+        _prevSlotButton?.onClick.AddListener(PreviousSlot);
+        _splitButton?.onClick.AddListener(() => CMD_SplitStack());
     }
 
     private void Update()
     {
         if (isServer) GetInventory().holder = _player.Location;
-
         if (!isOwned) return;
 
         ActionBarMessageUpdate();
 
         bool inventoryOpen = Inventory.IsAnyOpen(_player.playerInstance);
-        bool anyMenuOpen = inventoryOpen ||
-                           (ChatMenu.instance != null && ChatMenu.instance.open) ||
-                           SignEditMenu.IsLocalMenuOpen() ||
-                           PauseMenu.active ||
-                           GameObject.Find("ContainerInventoryMenu(Clone)") != null; // Stay "Open" if the clone is there
+        bool anyMenuOpen = inventoryOpen || PauseMenu.active || GameObject.Find("ContainerInventoryMenu(Clone)") != null;
 
-        if (inventoryOpen || anyMenuOpen)
-        {
-            _framesSinceInventoryOpen = 0;
-            if (_openButton != null) _openButton.gameObject.SetActive(false);
-        }
-        else
-        {
-            _framesSinceInventoryOpen++;
-            if (_openButton != null) _openButton.gameObject.SetActive(true);
-        }
+        _framesSinceInventoryOpen = inventoryOpen || anyMenuOpen ? 0 : _framesSinceInventoryOpen + 1;
 
-        if (_closeButton != null) _closeButton.gameObject.SetActive(anyMenuOpen);
+        _openButton?.gameObject.SetActive(!anyMenuOpen && _framesSinceInventoryOpen > 0);
+        _closeButton?.gameObject.SetActive(anyMenuOpen);
 
         PerformInput();
     }
@@ -115,14 +74,12 @@ public class PlayerInventoryHandler : NetworkBehaviour
     {
         bool canInteract = PlayerInteraction.CanInteractWithWorld();
 
-        if (!UnityEngine.Application.isMobilePlatform)
+        if (!Application.isMobilePlatform)
         {
             float scrollAmount = -Input.mouseScrollDelta.y;
-
             if (scrollAmount != 0)
             {
-                int newSelectedSlot = GetInventory().selectedSlot + (int)scrollAmount;
-                newSelectedSlot = (newSelectedSlot + 9) % 9;
+                int newSelectedSlot = (GetInventory().selectedSlot + (int)scrollAmount + 9) % 9;
                 CMD_UpdateSelectedSlot(newSelectedSlot);
             }
         }
@@ -137,68 +94,74 @@ public class PlayerInventoryHandler : NetworkBehaviour
 
         if (!canInteract) return;
 
-        if (Input.GetKeyDown(KeyCode.Q))
-            CMD_DropSelected();
+        if (Input.GetKeyDown(KeyCode.Q)) CMD_DropSelected();
+        if (Input.GetKeyDown(KeyCode.X)) CMD_SplitStack();
 
         HotbarSlotInput();
     }
 
-    public void NextSlot()
-    {
-        if (!isOwned) return;
-        int newSlot = (GetInventory().selectedSlot + 1) % 9;
-        CMD_UpdateSelectedSlot(newSlot);
-    }
-
-    public void PreviousSlot()
-    {
-        if (!isOwned) return;
-        int newSlot = (GetInventory().selectedSlot - 1 + 9) % 9;
-        CMD_UpdateSelectedSlot(newSlot);
-    }
+    public void NextSlot() => CMD_UpdateSelectedSlot((GetInventory().selectedSlot + 1) % 9);
+    public void PreviousSlot() => CMD_UpdateSelectedSlot((GetInventory().selectedSlot + 8) % 9);
 
     public void MobileOpenInventory()
     {
-        if (!isOwned) return;
-        if (_framesSinceInventoryOpen > 10)
-            CMD_OpenInventory();
+        if (!isOwned || _framesSinceInventoryOpen <= 10) return;
+        CMD_OpenInventory();
     }
 
     public void MobileCloseAllMenus()
     {
         if (!isOwned) return;
 
-        // 1. Force the logic to close
-        PlayerInventory inv = GetInventory();
-        if (inv != null) inv.Close();
-
-        // 2. Destroy the physical menu clones
-        GameObject containerUI = GameObject.Find("ContainerInventoryMenu(Clone)");
-        if (containerUI != null) Destroy(containerUI);
-
-        GameObject craftingUI = GameObject.Find("CraftingInventoryMenu(Clone)");
-        if (craftingUI != null) Destroy(craftingUI);
-
-        // 3. Reset the frames and static variables
-        _framesSinceInventoryOpen = 11; // Setting this higher than 10 unlocks input
-
-        if (ChatMenu.instance != null) ChatMenu.instance.open = false;
-
-        if (SignEditMenu.IsLocalMenuOpen())
-        {
-            var signMenu = GameObject.FindObjectOfType<SignEditMenu>();
-            if (signMenu != null) signMenu.gameObject.SetActive(false);
-        }
+        GetInventory().Close();
+        Destroy(GameObject.Find("ContainerInventoryMenu(Clone)"));
+        Destroy(GameObject.Find("CraftingInventoryMenu(Clone)"));
+        _framesSinceInventoryOpen = 11;
 
         PauseMenu.active = false;
+    }
 
-        if (_closeButton != null) _closeButton.gameObject.SetActive(false);
-        if (_openButton != null) _openButton.gameObject.SetActive(true);
+    [Command]
+    public void CMD_SplitStack()
+    {
+        PlayerInventory inv = GetInventory();
+        int slot = inv.selectedSlot;
+        ItemStack stack = inv.GetItem(slot);
+
+        if (stack.Amount <= 1) return;
+
+        int half = stack.Amount / 2;
+        int remainder = stack.Amount - half;
+
+        int emptySlot = -1;
+        for (int i = 0; i < 36; i++)
+        {
+            if (inv.GetItem(i).Amount == 0)
+            {
+                emptySlot = i;
+                break;
+            }
+        }
+
+        if (emptySlot == -1) return;
+
+        ItemStack newStack = stack;
+        newStack.Amount = half;
+
+        stack.Amount = remainder;
+
+        inv.SetItem(slot, stack);
+        inv.SetItem(emptySlot, newStack);
     }
 
     private void HotbarSlotInput()
     {
-        KeyCode[] numpadCodes = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9 };
+        KeyCode[] numpadCodes = {
+            KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3,
+            KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6,
+            KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9
+        };
+
         foreach (KeyCode keyCode in numpadCodes)
             if (Input.GetKeyDown(keyCode))
                 CMD_UpdateSelectedSlot(Array.IndexOf(numpadCodes, keyCode));
@@ -208,8 +171,10 @@ public class PlayerInventoryHandler : NetworkBehaviour
     private void ActionBarMessageUpdate()
     {
         Material selectedMaterial = GetInventory().GetSelectedItem().material;
+
         if (selectedMaterial != _actionBarLastSelectedMaterial && selectedMaterial != Material.Air)
             ActionBar.message = selectedMaterial.ToString().Replace('_', ' ');
+
         _actionBarLastSelectedMaterial = selectedMaterial;
     }
 
@@ -217,10 +182,12 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public void CMD_DropSelected()
     {
         ItemStack selectedItem = GetInventory().GetSelectedItem();
+
         if (selectedItem.Amount <= 0) return;
-        ItemStack droppedItem = selectedItem;
-        droppedItem.Amount = 1;
+
+        ItemStack droppedItem = new ItemStack(selectedItem.material, 1);
         selectedItem.Amount--;
+
         DropItem(droppedItem);
         GetInventory().SetItem(GetInventory().selectedSlot, selectedItem);
     }
@@ -228,8 +195,10 @@ public class PlayerInventoryHandler : NetworkBehaviour
     [Server]
     public void DropItem(ItemStack item)
     {
-        item.Drop(_player.Location + new Location(1 * (_player.facingLeft ? -1 : 1), 1),
-                  new Vector2(3 * (_player.facingLeft ? -1 : 1), 0f));
+        item.Drop(
+            _player.Location + new Location(_player.facingLeft ? -1 : 1, 1),
+            new Vector2(3 * (_player.facingLeft ? -1 : 1), 0f)
+        );
     }
 
     [Command]
@@ -247,11 +216,13 @@ public class PlayerInventoryHandler : NetworkBehaviour
     public PlayerInventory GetInventory()
     {
         Inventory inventory = Inventory.Get(_player.inventoryId);
+
         if (inventory == null)
         {
             inventory = PlayerInventory.CreatePreset();
             _player.inventoryId = inventory.id;
         }
+
         return (PlayerInventory)inventory;
     }
 }
